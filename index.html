@@ -20,11 +20,17 @@
 
   h1 {
     color: #4ee6c8;
-    text-shadow: 0 0 12px rgba(78, 230, 200, 0.6);
+    text-shadow: 0 0 12px rgba(78, 230, 200, 0.6), 0 0 28px rgba(92, 124, 250, 0.3);
     margin-bottom: 10px;
     font-size: 26px;
     letter-spacing: 3px;
     text-transform: uppercase;
+    animation: titleGlow 3s ease-in-out infinite;
+  }
+
+  @keyframes titleGlow {
+    0%, 100% { text-shadow: 0 0 12px rgba(78, 230, 200, 0.6), 0 0 28px rgba(92, 124, 250, 0.3); }
+    50% { text-shadow: 0 0 20px rgba(78, 230, 200, 0.9), 0 0 40px rgba(92, 124, 250, 0.5); }
   }
 
   #game-wrapper {
@@ -49,16 +55,30 @@
     text-shadow: 0 0 6px #000;
     display: flex;
     justify-content: space-between;
+    align-items: center;
   }
 
   #stat-group { display: flex; gap: 18px; }
   #livesDisplay { color: #ff5d7a; }
   #levelDisplay { color: #f5c451; }
 
+  #pauseButton {
+    background: rgba(78, 230, 200, 0.08);
+    border: 1px solid rgba(78, 230, 200, 0.4);
+    color: #4ee6c8;
+    font-size: 14px;
+    padding: 4px 9px;
+    border-radius: 4px;
+    cursor: pointer;
+    line-height: 1;
+  }
+
+  #pauseButton:hover { background: rgba(78, 230, 200, 0.18); }
+
   #overlay {
     position: absolute;
     inset: 0;
-    background: rgba(2, 5, 9, 0.9);
+    background: radial-gradient(ellipse at center, rgba(13, 27, 42, 0.96) 0%, rgba(2, 5, 9, 0.97) 100%);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -69,27 +89,53 @@
     padding: 20px;
   }
 
+  .menuCard {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    padding: 28px 26px;
+    border-radius: 14px;
+    background: linear-gradient(160deg, rgba(78, 230, 200, 0.07), rgba(92, 124, 250, 0.05));
+    border: 1px solid rgba(78, 230, 200, 0.35);
+    box-shadow: 0 0 35px rgba(78, 230, 200, 0.15), inset 0 0 20px rgba(92, 124, 250, 0.06);
+    width: 260px;
+  }
+
+  .menuIcon {
+    font-size: 30px;
+    filter: drop-shadow(0 0 8px rgba(78, 230, 200, 0.7));
+  }
+
   #overlay h2 {
-    font-size: 22px;
+    font-size: 21px;
     color: #4ee6c8;
-    letter-spacing: 1px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
   }
 
   #overlay p {
     font-size: 13px;
-    color: #7fa9a1;
-    max-width: 280px;
+    color: #8fb8b0;
+    max-width: 240px;
     line-height: 1.5;
   }
 
+  .menuButtons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+  }
+
   button {
-    background: transparent;
-    border: 2px solid #4ee6c8;
-    padding: 10px 26px;
-    border-radius: 4px;
-    color: #4ee6c8;
+    background: linear-gradient(160deg, rgba(78, 230, 200, 0.1), rgba(92, 124, 250, 0.08));
+    border: 1.5px solid #4ee6c8;
+    padding: 11px 26px;
+    border-radius: 6px;
+    color: #d8f8ef;
     font-weight: bold;
-    font-size: 14px;
+    font-size: 13px;
     letter-spacing: 2px;
     text-transform: uppercase;
     cursor: pointer;
@@ -97,8 +143,35 @@
     font-family: inherit;
   }
 
-  button:hover { background: rgba(78, 230, 200, 0.12); }
+  button:hover {
+    background: linear-gradient(160deg, rgba(78, 230, 200, 0.25), rgba(92, 124, 250, 0.18));
+    box-shadow: 0 0 14px rgba(78, 230, 200, 0.35);
+  }
+
   button:active { transform: scale(0.96); }
+
+  .volumeRow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    width: 100%;
+  }
+
+  .volumeRow button {
+    padding: 8px 14px;
+    font-size: 15px;
+  }
+
+  .volumeRow span {
+    font-size: 15px;
+    color: #f5c451;
+    min-width: 46px;
+  }
+
+  #musicMuteToggle, #sfxMuteToggle {
+    width: 100%;
+  }
 
   #hint {
     color: #4a6b6b;
@@ -121,16 +194,13 @@
         <div id="levelDisplay">LV.1</div>
       </div>
       <div id="livesDisplay">◆ ◆ ◆</div>
+      <button id="pauseButton" title="Pause / Settings">⏸</button>
     </div>
 
-    <div id="overlay">
-      <h2>Orbit Runner</h2>
-      <p>Pilot your ship through the debris field. Shoot to survive, dodge to endure. Every 10 points raises the stakes.</p>
-      <button id="startButton">Launch</button>
-    </div>
+    <div id="overlay"></div>
   </div>
 
-  <div id="hint">Arrow keys / drag to move — Space or tap to fire</div>
+  <div id="hint">Tap anywhere to enable sound — Arrow keys / drag to move — Space or tap to fire</div>
 
 <script>
 (() => {
@@ -157,9 +227,259 @@
   const levelDisplay = document.getElementById('levelDisplay');
   const livesDisplay = document.getElementById('livesDisplay');
   const overlay = document.getElementById('overlay');
-  const startButton = document.getElementById('startButton');
+  const pauseButton = document.getElementById('pauseButton');
 
   const { canvasWidth: W, canvasHeight: H } = CONFIG;
+
+  // Sound engine — generates effects and background music on the fly, no audio files needed.
+  // Music and sound effects run through two fully separate gain nodes, so each has its
+  // own independent volume and mute — turning one down never affects the other.
+  class SoundEngine {
+    constructor() {
+      this.context = null;
+      this.musicGain = null;
+      this.sfxGain = null;
+
+      this.musicVolume = 0.5; // 0 to 1
+      this.musicMuted = false;
+      this.sfxVolume = 0.5; // 0 to 1
+      this.sfxMuted = false;
+
+      this.musicTimeout = null;
+      this.stepCount = 0;
+
+      // Retro 8-bit arcade melody (upbeat, catchy, "old Game Boy" feel) — a fixed
+      // 16-step tune that loops, played on square waves like classic chiptune music.
+      this.melody = [
+        523.25, 659.25, 783.99, 659.25,
+        523.25, 659.25, 783.99, 1046.50,
+        932.33, 783.99, 659.25, 783.99,
+        932.33, 783.99, 659.25, 523.25,
+      ];
+      // Simple bass line under the melody, one note per 2 melody steps
+      this.bassLine = [130.81, 164.81, 196.00, 164.81];
+    }
+
+    // Lazily create the AudioContext on first user interaction
+    // (browsers block audio until the user has interacted with the page)
+    ensureContext() {
+      if (!this.context) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        this.context = new AudioContext();
+
+        this.musicGain = this.context.createGain();
+        this.musicGain.gain.value = this.musicMuted ? 0 : this.musicVolume;
+        this.musicGain.connect(this.context.destination);
+
+        this.sfxGain = this.context.createGain();
+        this.sfxGain.gain.value = this.sfxMuted ? 0 : this.sfxVolume;
+        this.sfxGain.connect(this.context.destination);
+      }
+      if (this.context.state === 'suspended') {
+        this.context.resume();
+      }
+    }
+
+    applyMusicGain() {
+      if (!this.musicGain) return;
+      const target = this.musicMuted ? 0 : this.musicVolume;
+      this.musicGain.gain.setTargetAtTime(target, this.context.currentTime, 0.05);
+    }
+
+    applySfxGain() {
+      if (!this.sfxGain) return;
+      const target = this.sfxMuted ? 0 : this.sfxVolume;
+      this.sfxGain.gain.setTargetAtTime(target, this.context.currentTime, 0.05);
+    }
+
+    setMusicVolume(value) {
+      this.musicVolume = Math.min(1, Math.max(0, value));
+      this.applyMusicGain();
+    }
+
+    toggleMusicMute() {
+      this.musicMuted = !this.musicMuted;
+      this.applyMusicGain();
+      return this.musicMuted;
+    }
+
+    setSfxVolume(value) {
+      this.sfxVolume = Math.min(1, Math.max(0, value));
+      this.applySfxGain();
+    }
+
+    toggleSfxMute() {
+      this.sfxMuted = !this.sfxMuted;
+      this.applySfxGain();
+      return this.sfxMuted;
+    }
+
+    // pan: -1 (left) to 1 (right), for a real stereo feel
+    // bus: 'music' or 'sfx' — picks which independent volume/mute this tone obeys
+    playTone({ freq, duration, type = 'sine', volume = 0.2, slideTo = null, delay = 0, pan = 0, bus = 'sfx' }) {
+      this.ensureContext();
+
+      const ctxA = this.context;
+      const startTime = ctxA.currentTime + delay;
+      const destinationGain = bus === 'music' ? this.musicGain : this.sfxGain;
+
+      const osc = ctxA.createOscillator();
+      const gain = ctxA.createGain();
+      const panner = ctxA.createStereoPanner ? ctxA.createStereoPanner() : null;
+
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, startTime);
+
+      if (slideTo !== null) {
+        osc.frequency.exponentialRampToValueAtTime(slideTo, startTime + duration);
+      }
+
+      gain.gain.setValueAtTime(0.0001, startTime);
+      gain.gain.exponentialRampToValueAtTime(volume, startTime + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+
+      if (panner) {
+        panner.pan.setValueAtTime(pan, startTime);
+        osc.connect(gain);
+        gain.connect(panner);
+        panner.connect(destinationGain);
+      } else {
+        osc.connect(gain);
+        gain.connect(destinationGain);
+      }
+
+      osc.start(startTime);
+      osc.stop(startTime + duration + 0.05);
+    }
+
+    playNoise({ duration, volume = 0.15, pan = 0, bus = 'sfx' }) {
+      this.ensureContext();
+
+      const ctxA = this.context;
+      const destinationGain = bus === 'music' ? this.musicGain : this.sfxGain;
+      const bufferSize = ctxA.sampleRate * duration;
+      const buffer = ctxA.createBuffer(1, bufferSize, ctxA.sampleRate);
+      const data = buffer.getChannelData(0);
+
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize);
+      }
+
+      const noise = ctxA.createBufferSource();
+      noise.buffer = buffer;
+
+      const gain = ctxA.createGain();
+      gain.gain.setValueAtTime(volume, ctxA.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctxA.currentTime + duration);
+
+      const panner = ctxA.createStereoPanner ? ctxA.createStereoPanner() : null;
+
+      if (panner) {
+        panner.pan.setValueAtTime(pan, ctxA.currentTime);
+        noise.connect(gain);
+        gain.connect(panner);
+        panner.connect(destinationGain);
+      } else {
+        noise.connect(gain);
+        gain.connect(destinationGain);
+      }
+
+      noise.start(ctxA.currentTime);
+    }
+
+    // All gameplay sound effects explicitly use the 'sfx' bus (the default)
+
+    shoot() {
+      this.playTone({ freq: 880, slideTo: 440, duration: 0.1, type: 'square', volume: 0.08 });
+    }
+
+    // Cute bubble "pop" instead of a harsh explosion — a quick bright blip that
+    // hops upward in pitch, like a little bubble popping.
+    enemyPop() {
+      const pan = (Math.random() * 1.4) - 0.7; // slight random stereo spread
+      this.playTone({ freq: 700, slideTo: 1400, duration: 0.09, type: 'sine', volume: 0.16, pan });
+      this.playTone({ freq: 1400, duration: 0.06, type: 'triangle', volume: 0.1, delay: 0.07, pan });
+    }
+
+    hit() {
+      this.playTone({ freq: 220, slideTo: 80, duration: 0.3, type: 'triangle', volume: 0.2 });
+    }
+
+    pickup() {
+      this.playTone({ freq: 523.25, duration: 0.1, type: 'sine', volume: 0.15 });
+      this.playTone({ freq: 783.99, duration: 0.15, type: 'sine', volume: 0.15, delay: 0.09 });
+    }
+
+    levelUp() {
+      this.playTone({ freq: 523.25, duration: 0.08, type: 'square', volume: 0.12 });
+      this.playTone({ freq: 659.25, duration: 0.08, type: 'square', volume: 0.12, delay: 0.08 });
+      this.playTone({ freq: 783.99, duration: 0.15, type: 'square', volume: 0.12, delay: 0.16 });
+    }
+
+    gameOver() {
+      this.playTone({ freq: 400, slideTo: 90, duration: 0.5, type: 'sawtooth', volume: 0.18 });
+      this.playTone({ freq: 200, slideTo: 50, duration: 0.6, type: 'triangle', volume: 0.15, delay: 0.15 });
+    }
+
+    // Retro arcade-style chiptune loop: a catchy square-wave melody with a bass line
+    // underneath, panned gently left/right per step for a real stereo "old arcade
+    // cabinet" feel. Runs continuously (menus + gameplay) until stopped. Plays on the
+    // 'music' bus so it has its own independent volume/mute from the sound effects.
+    startMusic() {
+      this.ensureContext();
+      if (this.musicTimeout) return;
+
+      const stepDuration = 0.16; // upbeat tempo
+
+      const playStep = () => {
+        const step = this.stepCount % this.melody.length;
+        const pan = step % 2 === 0 ? -0.35 : 0.35; // alternate left/right for stereo bounce
+
+        this.playTone({
+          freq: this.melody[step],
+          duration: stepDuration * 0.85,
+          type: 'square',
+          volume: 0.07,
+          pan,
+          bus: 'music',
+        });
+
+        if (step % 4 === 0) {
+          this.playTone({
+            freq: this.bassLine[Math.floor(step / 4) % this.bassLine.length],
+            duration: stepDuration * 3.4,
+            type: 'triangle',
+            volume: 0.06,
+            pan: 0,
+            bus: 'music',
+          });
+        }
+
+        this.stepCount++;
+        this.musicTimeout = setTimeout(playStep, stepDuration * 1000);
+      };
+
+      playStep();
+    }
+
+    stopMusic() {
+      if (this.musicTimeout) {
+        clearTimeout(this.musicTimeout);
+        this.musicTimeout = null;
+      }
+    }
+  }
+
+  const sound = new SoundEngine();
+
+  // Browsers block audio until the user interacts with the page, so music is
+  // started directly from the first real button press in the menu (Start or
+  // Settings) rather than a page-wide listener — this is a guaranteed user
+  // gesture, so it reliably unlocks and starts the music every time.
+  function unlockAudioAndStartMusic() {
+    sound.ensureContext();
+    sound.startMusic();
+  }
 
   // Entities
 
@@ -406,8 +726,10 @@
   class Game {
     constructor() {
       this.keys = {};
+      this.paused = false;
       this.reset();
       this.bindInput();
+      this.renderMainMenu();
     }
 
     reset() {
@@ -423,10 +745,12 @@
       this.frame = 0;
       this.spawnTimer = 0;
       this.running = false;
+      this.paused = false;
 
       scoreDisplay.textContent = this.score;
       levelDisplay.textContent = `LV.${this.level}`;
       this.updateLivesDisplay();
+      pauseButton.style.display = 'none';
     }
 
     updateLivesDisplay() {
@@ -435,26 +759,182 @@
       livesDisplay.textContent = filled + empty;
     }
 
+    // Main menu: title, Start, and Settings
+    renderMainMenu() {
+      overlay.innerHTML = `
+        <div class="menuCard">
+          <div class="menuIcon">🛸</div>
+          <h2>Orbit Runner</h2>
+          <p>Pilot your ship through the debris field. Shoot to survive, dodge to endure. Every 10 points raises the stakes.</p>
+          <div class="menuButtons">
+            <button id="startButton">▶ Start</button>
+            <button id="settingsButton">⚙ Settings</button>
+          </div>
+        </div>
+      `;
+      document.getElementById('startButton').addEventListener('click', () => {
+        unlockAudioAndStartMusic();
+        this.start();
+      });
+      document.getElementById('settingsButton').addEventListener('click', () => {
+        unlockAudioAndStartMusic();
+        this.renderSettingsMenu('main');
+      });
+    }
+
+    // Game over menu: score summary, Retry, and Settings
+    renderGameOverMenu() {
+      overlay.innerHTML = `
+        <div class="menuCard">
+          <div class="menuIcon">💥</div>
+          <h2>Run Ended</h2>
+          <p>Final score: ${this.score} — reached Level ${this.level}</p>
+          <div class="menuButtons">
+            <button id="restartButton">▶ Start</button>
+            <button id="settingsButton">⚙ Settings</button>
+          </div>
+        </div>
+      `;
+      document.getElementById('restartButton').addEventListener('click', () => this.start());
+      document.getElementById('settingsButton').addEventListener('click', () => this.renderSettingsMenu('gameover'));
+    }
+
+    // Pause menu (opened from the in-game pause button): Resume, Settings, Main menu
+    renderPauseMenu() {
+      overlay.style.display = 'flex';
+      overlay.innerHTML = `
+        <div class="menuCard">
+          <div class="menuIcon">⏸</div>
+          <h2>Paused</h2>
+          <div class="menuButtons">
+            <button id="resumeButton">▶ Resume</button>
+            <button id="settingsButton">⚙ Settings</button>
+            <button id="quitButton">■ Main Menu</button>
+          </div>
+        </div>
+      `;
+      document.getElementById('resumeButton').addEventListener('click', () => this.resume());
+      document.getElementById('settingsButton').addEventListener('click', () => this.renderSettingsMenu('pause'));
+      document.getElementById('quitButton').addEventListener('click', () => this.quitToMenu());
+    }
+
+    // Settings menu: independent volume + mute controls for Music and SFX,
+    // and a Close button back to the previous menu
+    renderSettingsMenu(returnTo) {
+      sound.ensureContext();
+      const musicPercent = Math.round(sound.musicVolume * 100);
+      const sfxPercent = Math.round(sound.sfxVolume * 100);
+
+      overlay.innerHTML = `
+        <div class="menuCard">
+          <div class="menuIcon">🔊</div>
+          <h2>Settings</h2>
+
+          <p style="margin-bottom: -6px;">Music</p>
+          <div id="musicVolumeRow" class="volumeRow">
+            <button id="musicVolDown">－</button>
+            <span id="musicVolumeValue">${musicPercent}%</span>
+            <button id="musicVolUp">＋</button>
+          </div>
+          <button id="musicMuteToggle">${sound.musicMuted ? '🔇 Unmute Music' : '🔈 Mute Music'}</button>
+
+          <p style="margin-bottom: -6px;">Sound Effects</p>
+          <div id="sfxVolumeRow" class="volumeRow">
+            <button id="sfxVolDown">－</button>
+            <span id="sfxVolumeValue">${sfxPercent}%</span>
+            <button id="sfxVolUp">＋</button>
+          </div>
+          <button id="sfxMuteToggle">${sound.sfxMuted ? '🔇 Unmute SFX' : '🔈 Mute SFX'}</button>
+
+          <div class="menuButtons">
+            <button id="closeSettings">Close</button>
+          </div>
+        </div>
+      `;
+
+      const musicVolumeValue = document.getElementById('musicVolumeValue');
+      const musicMuteToggle = document.getElementById('musicMuteToggle');
+      const sfxVolumeValue = document.getElementById('sfxVolumeValue');
+      const sfxMuteToggle = document.getElementById('sfxMuteToggle');
+
+      document.getElementById('musicVolDown').addEventListener('click', () => {
+        sound.setMusicVolume(sound.musicVolume - 0.1);
+        musicVolumeValue.textContent = `${Math.round(sound.musicVolume * 100)}%`;
+      });
+
+      document.getElementById('musicVolUp').addEventListener('click', () => {
+        sound.setMusicVolume(sound.musicVolume + 0.1);
+        musicVolumeValue.textContent = `${Math.round(sound.musicVolume * 100)}%`;
+      });
+
+      musicMuteToggle.addEventListener('click', () => {
+        const isMuted = sound.toggleMusicMute();
+        musicMuteToggle.textContent = isMuted ? '🔇 Unmute Music' : '🔈 Mute Music';
+      });
+
+      document.getElementById('sfxVolDown').addEventListener('click', () => {
+        sound.setSfxVolume(sound.sfxVolume - 0.1);
+        sfxVolumeValue.textContent = `${Math.round(sound.sfxVolume * 100)}%`;
+      });
+
+      document.getElementById('sfxVolUp').addEventListener('click', () => {
+        sound.setSfxVolume(sound.sfxVolume + 0.1);
+        sfxVolumeValue.textContent = `${Math.round(sound.sfxVolume * 100)}%`;
+      });
+
+      sfxMuteToggle.addEventListener('click', () => {
+        const isMuted = sound.toggleSfxMute();
+        sfxMuteToggle.textContent = isMuted ? '🔇 Unmute SFX' : '🔈 Mute SFX';
+      });
+
+      document.getElementById('closeSettings').addEventListener('click', () => {
+        if (returnTo === 'main') this.renderMainMenu();
+        else if (returnTo === 'gameover') this.renderGameOverMenu();
+        else this.renderPauseMenu();
+      });
+    }
+
     start() {
       this.reset();
       this.running = true;
       overlay.style.display = 'none';
+      pauseButton.style.display = 'inline-block';
+      sound.ensureContext();
+      sound.startMusic();
+    }
+
+    pause() {
+      if (!this.running || this.paused) return;
+      this.paused = true;
+      this.renderPauseMenu();
+    }
+
+    resume() {
+      this.paused = false;
+      overlay.style.display = 'none';
+    }
+
+    quitToMenu() {
+      this.paused = false;
+      this.running = false;
+      sound.stopMusic();
+      pauseButton.style.display = 'none';
+      this.renderMainMenu();
+      overlay.style.display = 'flex';
     }
 
     end() {
       this.running = false;
+      pauseButton.style.display = 'none';
+      sound.gameOver();
       overlay.style.display = 'flex';
-      overlay.innerHTML = `
-        <h2>Run Ended</h2>
-        <p>Final score: ${this.score} — reached Level ${this.level}</p>
-        <button id="restartButton">Retry</button>
-      `;
-      document.getElementById('restartButton').addEventListener('click', () => this.start());
+      this.renderGameOverMenu();
     }
 
     fireBullet() {
-      if (!this.running) return;
+      if (!this.running || this.paused) return;
       this.bullets.push(new Bullet(this.player.centerX - 2.5, this.player.y));
+      sound.shoot();
     }
 
     spawnEnemy() {
@@ -475,6 +955,7 @@
       if (newLevel !== this.level) {
         this.level = newLevel;
         levelDisplay.textContent = `LV.${this.level}`;
+        sound.levelUp();
       }
     }
 
@@ -484,6 +965,9 @@
         if (e.key === ' ') {
           e.preventDefault();
           this.fireBullet();
+        }
+        if (e.key === 'Escape' && this.running) {
+          this.paused ? this.resume() : this.pause();
         }
       });
 
@@ -500,7 +984,8 @@
       }, { passive: false });
 
       canvas.addEventListener('click', () => this.fireBullet());
-      startButton.addEventListener('click', () => this.start());
+
+      pauseButton.addEventListener('click', () => this.pause());
     }
 
     updatePlayerMovement() {
@@ -537,6 +1022,7 @@
           const bullet = this.bullets[j];
           if (enemy.collidesWith(bullet)) {
             this.explode(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2, enemy.color);
+            sound.enemyPop();
 
             if (enemy.dropsShield) {
               this.pickups.push(new ShieldPickup(enemy.x, enemy.y));
@@ -564,10 +1050,12 @@
 
           if (this.player.shielded) {
             this.explode(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2, '#4ee6c8');
+            sound.enemyPop();
             continue;
           }
 
           this.explode(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2, enemy.color);
+          sound.hit();
           this.lives--;
           this.updateLivesDisplay();
           if (this.lives <= 0) this.end();
@@ -588,6 +1076,7 @@
 
         if (pickup.collidesWith(this.player)) {
           this.player.activateShield();
+          sound.pickup();
           this.pickups.splice(i, 1);
         }
       }
@@ -602,7 +1091,7 @@
       this.frame++;
       this.stars.forEach((s) => s.update());
 
-      if (!this.running) return;
+      if (!this.running || this.paused) return;
 
       this.updatePlayerMovement();
       this.updateBullets();
